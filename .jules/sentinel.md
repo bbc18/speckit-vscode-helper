@@ -1,0 +1,4 @@
+## 2024-05-16 - Command Injection via `child_process.exec`
+**Vulnerability:** Git commands were executed using `child_process.exec` with unsanitized inputs like branch names and target paths concatenated into string shell commands (e.g. `git worktree add "${targetPath}" "${branch}"`). This is vulnerable to Command Injection if user inputs contain shell control characters.
+**Learning:** `ExecFn` abstraction in `worktreeService` allowed for centralizing command execution, but the signature enforced string-based commands.
+**Prevention:** Avoid `child_process.exec`. Use `child_process.execFile` and pass user inputs as an array of discrete arguments, separating options from positional arguments with `--` where possible. In this fix, `ExecFn` was updated to accept `(file: string, args: readonly string[], opts: ...)` and pass them to `childProcess.execFile`.
