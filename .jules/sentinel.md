@@ -1,0 +1,4 @@
+## 2024-05-17 - [Refactor Git Execution]
+**Vulnerability:** Command Injection via `child_process.exec` in Git Worktree Service
+**Learning:** Using `child_process.exec` with untrusted shell strings (like a branch name or file path) directly allows for command injection. A user could craft a branch name such as `branch; rm -rf /` and execute arbitrary code. The signature for `ExecFn` took a single string command.
+**Prevention:** Always use `child_process.execFile` with the actual program as the file string, and an array of individual string arguments for parameters. In the case of Git operations, ensure variables passed directly as positional arguments (such as a branch or file target) are prefixed by the double-dash `--` argument. Ensure lint rules enforce `execFile` or `spawn` with array arguments instead of stringly-typed command execution primitives.
