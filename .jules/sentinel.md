@@ -1,0 +1,4 @@
+## 2025-02-19 - Refactor Git child process to use execFile array syntax
+**Vulnerability:** Arbitrary command and argument injection vectors were possible because `child_process.exec` passes strings directly to a sub-shell. Functions like `git rev-parse --verify "${branch}"` and `git worktree add "${targetPath}" "${branch}"` concatenated user-controlled inputs.
+**Learning:** Shell strings allow characters like `;`, `|`, `&&`, and `$()` to inject arbitrary shell commands, and hyphens (`-`) to inject arbitrary arguments even when quoting is used. Replacing `exec` with `execFile` or an array-based execution bypasses the shell execution entirely.
+**Prevention:** Always use an arguments array (e.g. `child_process.execFile` or `child_process.spawn`) instead of `child_process.exec` with string formatting. Additionally, separate Git subcommand arguments from positional target parameters with the `--` separator.

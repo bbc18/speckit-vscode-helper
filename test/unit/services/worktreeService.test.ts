@@ -24,7 +24,7 @@ const PORCELAIN_DETACHED = [
 ].join('\n');
 
 function makeExec(stdout: string, stderr = '', err: Error | null = null): ExecFn {
-  return (_cmd, _opts, cb) => cb(err, stdout, stderr);
+  return (_file, _args, _opts, cb) => cb(err, stdout, stderr);
 }
 
 suite('WorktreeService (US3)', () => {
@@ -70,9 +70,10 @@ suite('WorktreeService (US3)', () => {
     test('uses -b flag when branch does not exist (new branch path)', async () => {
       const commands: string[] = [];
       // First call (rev-parse) fails → branch does not exist; second call (worktree add -b) succeeds
-      const execFn: ExecFn = (cmd, _opts, cb) => {
-        commands.push(cmd);
-        if (cmd.includes('rev-parse')) {
+      const execFn: ExecFn = (file, args, _opts, cb) => {
+        const fullCmd = [file, ...args].join(' ');
+        commands.push(fullCmd);
+        if (fullCmd.includes('rev-parse')) {
           cb(new Error('unknown revision'), '', 'unknown revision');
         } else {
           cb(null, 'Preparing worktree (new branch)', '');
@@ -88,8 +89,9 @@ suite('WorktreeService (US3)', () => {
     test('omits -b flag when branch already exists', async () => {
       const commands: string[] = [];
       // First call (rev-parse) succeeds → branch exists; second call (worktree add) succeeds
-      const execFn: ExecFn = (cmd, _opts, cb) => {
-        commands.push(cmd);
+      const execFn: ExecFn = (file, args, _opts, cb) => {
+        const fullCmd = [file, ...args].join(' ');
+        commands.push(fullCmd);
         cb(null, 'abc123', '');
       };
 
@@ -104,7 +106,7 @@ suite('WorktreeService (US3)', () => {
       const fakeError = Object.assign(new Error('Command failed'), { code: 1 });
       // rev-parse succeeds (branch exists), then worktree add fails
       let callCount = 0;
-      const execFn: ExecFn = (_cmd, _opts, cb) => {
+      const execFn: ExecFn = (_file, _args, _opts, cb) => {
         callCount++;
         if (callCount === 1) {
           cb(null, 'abc123', ''); // rev-parse succeeds
