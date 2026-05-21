@@ -1,0 +1,4 @@
+## 2024-05-20 - Command Injection Vulnerability via Unsanitized Input in makeExecGit
+**Vulnerability:** Command injection vulnerability in `makeExecGit` and callers using `childProcess.exec`. It accepts arbitrary user input (e.g., `branch` and `targetPath`) and passes it into a shell string execution `execGit(git worktree add "${targetPath}" "${branch}", gitRoot)` without validation, allowing a malicious user to supply branch names or target paths with shell metacharacters to execute arbitrary commands.
+**Learning:** This codebase uses a custom wrapper around `childProcess.exec` that takes a full command string, exposing it to command injection.
+**Prevention:** Use `childProcess.execFile` and pass arguments as an array instead of constructing a command string. Include the `--` separator before positional arguments to prevent option injection.
