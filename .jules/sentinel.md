@@ -1,0 +1,4 @@
+## 2026-05-24 - [Critical Security Fix] Command Injection in ExecFn
+**Vulnerability:** The project used `child_process.exec` with a single command string for Git operations, passing user-controlled inputs directly into the shell string without sanitization. This introduced a significant command injection vulnerability.
+**Learning:** `child_process.execFile` MUST be used instead of `child_process.exec` to avoid relying on a shell that can execute injected commands. Additionally, passing arguments as an array ensures that arguments and options are not inadvertently parsed as command execution or arguments.
+**Prevention:** To prevent command and option injection, always use `child_process.execFile` with an argument array for executing child processes. Furthermore, include the `--` separator before positional arguments to prevent option injection.
