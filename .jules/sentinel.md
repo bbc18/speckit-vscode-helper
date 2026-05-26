@@ -1,0 +1,4 @@
+## 2026-05-25 - Prevent Command and Argument Injection in Git Executions
+**Vulnerability:** The project used `child_process.exec` to run Git commands, interpolating user-controlled data such as branch names and target paths directly into the command string. This is vulnerable to command injection. Further, passing arguments without a `--` separator can allow argument injection even with `execFile`.
+**Learning:** In a VS Code extension, inputs like branch names derived from worktrees or user inputs can be maliciously crafted. Standard `childProcess.exec` provides a shell, executing unintended commands if special characters are not handled.
+**Prevention:** Always use `child_process.execFile` and pass a fixed executable name (`git`) with an array of arguments (`args`). Use the `--` separator before positional arguments that originate from outside to prevent Git from interpreting them as flags (e.g. `['worktree', 'add', '--', targetPath, branch]`).
