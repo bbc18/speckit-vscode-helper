@@ -1,0 +1,4 @@
+## 2024-05-31 - Command Injection via child_process.exec
+**Vulnerability:** Found `child_process.exec` being used to run git commands with user-controlled input (e.g., branch names, paths) via shell interpolation in `src/services/worktreeService.ts` and `src/services/worktreeAggregator.ts`.
+**Learning:** `childProcess.exec` passes strings to the shell, making it susceptible to command injection if variables like `branch` or `targetPath` aren't thoroughly sanitized. A malicious branch name could execute arbitrary shell commands.
+**Prevention:** Replaced `child_process.exec` with `child_process.execFile` and updated the `ExecFn` type to accept an argument array, eliminating the shell interpolation vulnerability by passing user arguments directly to the executable. Also used the `--` separator before positional paths in git commands.
