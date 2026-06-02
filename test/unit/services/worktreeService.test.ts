@@ -24,7 +24,7 @@ const PORCELAIN_DETACHED = [
 ].join('\n');
 
 function makeExec(stdout: string, stderr = '', err: Error | null = null): ExecFn {
-  return (_cmd, _opts, cb) => cb(err, stdout, stderr);
+  return (_file, _args, _opts, cb) => cb(err, stdout, stderr);
 }
 
 suite('WorktreeService (US3)', () => {
@@ -68,11 +68,11 @@ suite('WorktreeService (US3)', () => {
 
   suite('addWorktree', () => {
     test('uses -b flag when branch does not exist (new branch path)', async () => {
-      const commands: string[] = [];
+      const executedArgs: (readonly string[])[] = [];
       // First call (rev-parse) fails → branch does not exist; second call (worktree add -b) succeeds
-      const execFn: ExecFn = (cmd, _opts, cb) => {
-        commands.push(cmd);
-        if (cmd.includes('rev-parse')) {
+      const execFn: ExecFn = (_file, args, _opts, cb) => {
+        executedArgs.push(args);
+        if (args.includes('rev-parse')) {
           cb(new Error('unknown revision'), '', 'unknown revision');
         } else {
           cb(null, 'Preparing worktree (new branch)', '');
@@ -82,29 +82,29 @@ suite('WorktreeService (US3)', () => {
       await assert.doesNotReject(
         addWorktree('004-smart-login-redirect', '/repo/worktrees/004-smart-login-redirect', '/repo/main', execFn),
       );
-      assert.ok(commands.some((c) => c.includes('-b')), 'must use -b when branch is new');
+      assert.ok(executedArgs.some((args) => args.includes('-b')), 'must use -b when branch is new');
     });
 
     test('omits -b flag when branch already exists', async () => {
-      const commands: string[] = [];
+      const executedArgs: (readonly string[])[] = [];
       // First call (rev-parse) succeeds → branch exists; second call (worktree add) succeeds
-      const execFn: ExecFn = (cmd, _opts, cb) => {
-        commands.push(cmd);
+      const execFn: ExecFn = (_file, args, _opts, cb) => {
+        executedArgs.push(args);
         cb(null, 'abc123', '');
       };
 
       await assert.doesNotReject(
         addWorktree('002-feature', '/repo/worktrees/002-feature', '/repo/main', execFn),
       );
-      const addCmd = commands.find((c) => c.includes('worktree add'));
-      assert.ok(addCmd && !addCmd.includes(' -b '), 'must NOT use -b when branch already exists');
+      const addArgs = executedArgs.find((args) => args.includes('add'));
+      assert.ok(addArgs && !addArgs.includes('-b'), 'must NOT use -b when branch already exists');
     });
 
     test('rejects with trimmed stderr on non-zero exit', async () => {
       const fakeError = Object.assign(new Error('Command failed'), { code: 1 });
       // rev-parse succeeds (branch exists), then worktree add fails
       let callCount = 0;
-      const execFn: ExecFn = (_cmd, _opts, cb) => {
+      const execFn: ExecFn = (_file, _args, _opts, cb) => {
         callCount++;
         if (callCount === 1) {
           cb(null, 'abc123', ''); // rev-parse succeeds

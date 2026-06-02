@@ -1,0 +1,4 @@
+## 2026-06-01 - [Command Injection via `child_process.exec`]
+**Vulnerability:** The `ExecFn` type and its implementations in `src/services/worktreeService.ts` and `src/services/worktreeAggregator.ts` used `child_process.exec` to run Git commands by concatenating user-controlled variables (like branch names and paths) directly into shell strings. This created a severe risk of command injection.
+**Learning:** In contexts where git is invoked programmatically, developers often reach for `exec` since it's easy to paste typical shell commands, but it inadvertently exposes the application to arbitrary shell command execution if any inputs (even seemingly safe ones like branches) are untrusted.
+**Prevention:** Always wrap `child_process.execFile` instead of `child_process.exec` for system commands, passing user inputs strictly as an array of arguments, and use the `--` separator where appropriate so user-supplied paths or names aren't mistakenly parsed as options.
