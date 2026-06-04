@@ -1,0 +1,4 @@
+## 2025-10-10 - [Command Injection]
+**Vulnerability:** Command injection through `child_process.exec` in `ExecFn` when dealing with user-supplied branch names in git commands.
+**Learning:** Shell interpretation of git branch parameters natively allowed breaking out of the command. Using arrays via `child_process.execFile` prevents shell injections.
+**Prevention:** Avoid `child_process.exec` and stick to `child_process.execFile` with argument arrays. Furthermore, use the POSIX standard `--` separator in positional user-supplied arguments for git commands to avoid option injection, with the specific exception of `git rev-parse --verify`, which treats trailing targets natively as revision hashes and fails if `--` is prepended.
