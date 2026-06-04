@@ -1,0 +1,4 @@
+## 2024-06-05 - child_process.exec allows command injection
+**Vulnerability:** `childProcess.exec` is used to execute Git commands, allowing for command injection if user input is passed directly without validation/escaping. Specifically in `src/services/worktreeService.ts` and `src/services/worktreeAggregator.ts`, user input (like branch names, which can be extracted from untrusted sources) is concatenated directly into strings passed to `exec`.
+**Learning:** Never use `child_process.exec` when user input might be present. Instead, use `child_process.execFile` with an array of arguments to execute commands securely.
+**Prevention:** Change the definition of `ExecFn` to take a file and arguments array instead of a command string, update implementations to use `childProcess.execFile`, and pass untrusted inputs (like branch names and file paths) correctly through the arguments array, using the `--` separator where appropriate (but not for `git rev-parse --verify`).
