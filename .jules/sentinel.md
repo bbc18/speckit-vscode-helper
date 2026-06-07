@@ -1,0 +1,4 @@
+## 2024-06-07 - [Command Injection via exec]
+**Vulnerability:** Found a CRITICAL command injection vulnerability in `src/services/worktreeService.ts` where user-controlled inputs `branch` and `targetPath` were concatenated directly into a `git worktree add "${targetPath}" "${branch}"` string and executed using `child_process.exec`.
+**Learning:** Using `child_process.exec` with unsanitized inputs allows an attacker to break out of the string boundary and execute arbitrary shell commands. Furthermore, `git rev-parse --verify` should not use the `--` file separator before the revision, as it causes the command to evaluate it as a file path.
+**Prevention:** Always use `child_process.execFile` instead of `exec` to explicitly separate the executable from its arguments array. For untrusted arguments like file paths or branches, separate them using `--` (e.g., `['worktree', 'add', '--', targetPath, branch]`) to prevent them from being interpreted as command options.
