@@ -1,0 +1,4 @@
+## 2026-06-17 - Command and Argument Injection in Git Commands
+**Vulnerability:** User-provided inputs (`branch`, `targetPath`) were concatenated into shell command strings executed via `childProcess.exec`.
+**Learning:** `childProcess.exec` is vulnerable to shell metacharacter injection when using string interpolation. Further, `git` commands are susceptible to argument injection if user inputs begin with a hyphen.
+**Prevention:** Use `childProcess.execFile` and pass user inputs explicitly as an array of arguments. Always use `--` to indicate the end of command-line options before user-provided positional arguments (e.g. `git worktree add -- <path> <branch>`) to prevent argument injection. Avoid using `--` with `git rev-parse --verify`, as it interprets the argument as a file instead of a ref.
