@@ -1,0 +1,4 @@
+## 2024-05-18 - [Fix Command Injection in Git Worktree Service]
+**Vulnerability:** Unsanitized user inputs (`branch`, `targetPath`) were passed directly into string templates used by `childProcess.exec` when calling `git worktree add` and `git rev-parse`, leading to severe Command Injection if inputs contained shell metacharacters.
+**Learning:** Using `childProcess.exec` is dangerous when combining command strings with any dynamic or user-influenced input. The type signature abstracted this danger.
+**Prevention:** Standardize Git and shell calls on `childProcess.execFile` or `childProcess.spawn`. Use arrays for arguments, avoiding shell interpretation completely. Use `--` separator for positional arguments where applicable (but avoid it for `git rev-parse --verify` which misinterprets it).
