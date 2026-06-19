@@ -7,15 +7,16 @@ export interface WorktreeInfo {
 }
 
 export type ExecFn = (
-  cmd: string,
+  file: string,
+  args: ReadonlyArray<string>,
   opts: { cwd: string },
   cb: (err: Error | null, stdout: string, stderr: string) => void,
 ) => void;
 
 function makeExecGit(execFn: ExecFn) {
-  return (cmd: string, cwd: string): Promise<string> =>
+  return (args: ReadonlyArray<string>, cwd: string): Promise<string> =>
     new Promise((resolve, reject) => {
-      execFn(cmd, { cwd }, (err, stdout, stderr) => {
+      execFn('git', args, { cwd }, (err, stdout, stderr) => {
         if (err) {
           reject(new Error(stderr.trim() || err.message));
         } else {
@@ -27,12 +28,12 @@ function makeExecGit(execFn: ExecFn) {
 
 export async function listWorktrees(
   gitRoot: string,
-  execFn: ExecFn = childProcess.exec,
+  execFn: ExecFn = childProcess.execFile,
 ): Promise<WorktreeInfo[]> {
   const execGit = makeExecGit(execFn);
   let output: string;
   try {
-    output = await execGit('git worktree list --porcelain', gitRoot);
+    output = await execGit(['worktree', 'list', '--porcelain'], gitRoot);
   } catch {
     return [];
   }
@@ -75,22 +76,22 @@ export async function addWorktree(
   branch: string,
   targetPath: string,
   gitRoot: string,
-  execFn: ExecFn = childProcess.exec,
+  execFn: ExecFn = childProcess.execFile,
 ): Promise<void> {
   const execGit = makeExecGit(execFn);
 
   // Check if the branch already exists; use -b to create it if not.
   let branchExists = false;
   try {
-    await execGit(`git rev-parse --verify "${branch}"`, gitRoot);
+    await execGit(['rev-parse', '--verify', branch], gitRoot);
     branchExists = true;
   } catch {
     branchExists = false;
   }
 
   if (branchExists) {
-    await execGit(`git worktree add "${targetPath}" "${branch}"`, gitRoot);
+    await execGit(['worktree', 'add', '--', targetPath, branch], gitRoot);
   } else {
-    await execGit(`git worktree add -b "${branch}" "${targetPath}"`, gitRoot);
+    await execGit(['worktree', 'add', '-b', branch, '--', targetPath], gitRoot);
   }
 }
