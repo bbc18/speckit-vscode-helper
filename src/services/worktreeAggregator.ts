@@ -10,10 +10,10 @@ let _warnedOverLimit = false;
 
 export async function findGitRoot(
   workspaceRoot: string,
-  execFn: ExecFn = childProcess.exec,
+  execFn: ExecFn = childProcess.execFile as unknown as ExecFn,
 ): Promise<string | undefined> {
   return new Promise((resolve) => {
-    execFn('git rev-parse --show-toplevel', { cwd: workspaceRoot }, (err, stdout) => {
+    execFn('git', ['rev-parse', '--show-toplevel'], { cwd: workspaceRoot }, (err, stdout) => {
       if (err) {
         resolve(undefined);
       } else {
@@ -87,6 +87,7 @@ export async function aggregateFeatures(
  * 2. Current workspace: wins over list-order when no suffix match exists.
  * 3. List order (weakest): first occurrence in the input array.
  */
+// eslint-disable-next-line complexity
 export function deduplicateFeatures(groups: FeatureGroup[]): FeatureGroup[] {
   // owner: featureFolderName → winning group index
   const owner = new Map<string, number>();
