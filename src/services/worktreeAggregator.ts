@@ -10,14 +10,18 @@ let _warnedOverLimit = false;
 
 export async function findGitRoot(
   workspaceRoot: string,
-  execFn: ExecFn = childProcess.exec,
+  execFn: ExecFn = childProcess.execFile,
 ): Promise<string | undefined> {
   return new Promise((resolve) => {
-    execFn('git rev-parse --show-toplevel', { cwd: workspaceRoot }, (err, stdout) => {
+    execFn('git', ['rev-parse', '--show-toplevel'], { cwd: workspaceRoot }, (err, stdout) => {
       if (err) {
         resolve(undefined);
       } else {
-        resolve(stdout.trim());
+        if (typeof stdout === 'string') {
+          resolve(stdout.trim());
+        } else {
+          resolve(stdout.toString().trim());
+        }
       }
     });
   });
@@ -87,11 +91,7 @@ export async function aggregateFeatures(
  * 2. Current workspace: wins over list-order when no suffix match exists.
  * 3. List order (weakest): first occurrence in the input array.
  */
-export function deduplicateFeatures(groups: FeatureGroup[]): FeatureGroup[] {
-  // owner: featureFolderName → winning group index
-  const owner = new Map<string, number>();
-
-  // Pass 1 — list order (weakest): first occurrence wins
+function deduplicatePass1(groups: FeatureGroup[], owner: Map<string, number>): void {
   for (let i = 0; i < groups.length; i++) {
     for (const f of groups[i].features) {
       if (!owner.has(f.branchName)) {
@@ -99,8 +99,9 @@ export function deduplicateFeatures(groups: FeatureGroup[]): FeatureGroup[] {
       }
     }
   }
+}
 
-  // Pass 2 — current workspace overrides non-suffix-matched list-order winners
+function deduplicatePass2(groups: FeatureGroup[], owner: Map<string, number>): void {
   const currentIdx = groups.findIndex((g) => g.worktree.isCurrentWorkspace);
   if (currentIdx >= 0) {
     for (const f of groups[currentIdx].features) {
@@ -116,8 +117,9 @@ export function deduplicateFeatures(groups: FeatureGroup[]): FeatureGroup[] {
       }
     }
   }
+}
 
-  // Pass 3 — suffix-match (strongest): always overrides any prior assignment
+function deduplicatePass3(groups: FeatureGroup[], owner: Map<string, number>): void {
   for (let i = 0; i < groups.length; i++) {
     const branch = groups[i].worktree.branch;
     if (!branch) {
@@ -129,6 +131,15 @@ export function deduplicateFeatures(groups: FeatureGroup[]): FeatureGroup[] {
       }
     }
   }
+}
+
+export function deduplicateFeatures(groups: FeatureGroup[]): FeatureGroup[] {
+  // owner: featureFolderName → winning group index
+  const owner = new Map<string, number>();
+
+  deduplicatePass1(groups, owner);
+  deduplicatePass2(groups, owner);
+  deduplicatePass3(groups, owner);
 
   return groups.map((g, i) => ({
     ...g,
