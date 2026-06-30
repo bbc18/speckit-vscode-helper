@@ -1,0 +1,4 @@
+## 2025-02-17 - [Secure Git Command Execution]
+**Vulnerability:** Git commands were previously executed by constructing full command strings (e.g. `` git rev-parse --verify "${branch}" ``) and passing them to `childProcess.exec`. This could allow command injection or argument injection if input parameters are not sanitized properly.
+**Learning:** For git commands specifically within this repository, wrapping git commands in array structures helps abstract away raw string manipulation, which is a key mechanism for code injection attacks.
+**Prevention:** Use `childProcess.execFile` by default, separating the executable (`git`) from its arguments. For specific git subcommands, properly apply the `--` separator before positional arguments (like branch names and paths) to explicitly mark them as arguments rather than command flags, except in specific git commands like `rev-parse --verify` where using `--` breaks functionality.
