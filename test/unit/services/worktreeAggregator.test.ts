@@ -9,7 +9,7 @@ import { ArtifactType } from '../../../src/models/artifact.js';
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 function makeExec(stdout: string, err: Error | null = null): ExecFn {
-  return (_cmd, _opts, cb) => cb(err, stdout, '');
+  return (file, args, _opts, cb) => cb(err, stdout, '');
 }
 
 function makeWorktree(p: string, branch: string | undefined, isCurrent: boolean): WorktreeInfo {
