@@ -124,5 +124,13 @@ suite('WorktreeService (US3)', () => {
         },
       );
     });
+
+    test('rejects branch names starting with a hyphen to prevent argument injection', async () => {
+      const execFn: ExecFn = (_file, _args, _opts, cb) => cb(null, '', '');
+      await assert.rejects(
+        addWorktree('-test-branch', '/repo/worktrees/test-branch', '/repo/main', execFn),
+        /Invalid branch name: cannot start with a hyphen/,
+      );
+    });
   });
 });
