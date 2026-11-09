@@ -67,6 +67,14 @@ suite('WorktreeService (US3)', () => {
   });
 
   suite('addWorktree', () => {
+    test('rejects branch names starting with a hyphen to prevent argument injection', async () => {
+      const execFn: ExecFn = (_file, _args, _opts, cb) => cb(null, '', '');
+      await assert.rejects(
+        addWorktree('-invalid-branch', '/repo/worktrees/invalid', '/repo/main', execFn),
+        /Branch name cannot start with a hyphen/
+      );
+    });
+
     test('uses -b flag when branch does not exist (new branch path)', async () => {
       const commands: string[][] = [];
       // First call (rev-parse) fails → branch does not exist; second call (worktree add -b) succeeds

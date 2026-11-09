@@ -78,6 +78,10 @@ export async function addWorktree(
   gitRoot: string,
   execFn: ExecFn = childProcess.execFile,
 ): Promise<void> {
+  if (branch.startsWith('-')) {
+    throw new Error('Branch name cannot start with a hyphen to prevent argument injection');
+  }
+
   const execGit = makeExecGit(execFn);
 
   // Check if the branch already exists; use -b to create it if not.
