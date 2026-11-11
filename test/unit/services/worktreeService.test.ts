@@ -100,6 +100,20 @@ suite('WorktreeService (US3)', () => {
       assert.ok(addArgs && !addArgs.includes('-b'), 'must NOT use -b when branch already exists');
     });
 
+    test('rejects immediately when branch starts with a hyphen to prevent argument injection', async () => {
+      const execFn: ExecFn = () => assert.fail('Should not call execFn');
+      await assert.rejects(
+        addWorktree('-malicious-branch', '/repo/worktrees/malicious', '/repo/main', execFn),
+        (err: Error) => {
+          assert.strictEqual(
+            err.message,
+            'Invalid branch name: cannot start with a hyphen (prevents argument injection)',
+          );
+          return true;
+        },
+      );
+    });
+
     test('rejects with trimmed stderr on non-zero exit', async () => {
       const fakeError = Object.assign(new Error('Command failed'), { code: 1 });
       // rev-parse succeeds (branch exists), then worktree add fails
